@@ -42,13 +42,16 @@
             this.nfyStart = new System.Windows.Forms.NotifyIcon(this.components);
             this.timer1 = new System.Windows.Forms.Timer(this.components);
             this.dtpAlarmTime = new System.Windows.Forms.DateTimePicker();
-            this.Active = new System.Windows.Forms.DataGridViewCheckBoxColumn();
-            this.What = new System.Windows.Forms.DataGridViewTextBoxColumn();
-            this.Time = new System.Windows.Forms.DataGridViewTextBoxColumn();
-            this.Sound = new System.Windows.Forms.DataGridViewTextBoxColumn();
-            this.Fired = new System.Windows.Forms.DataGridViewCheckBoxColumn();
             this.btnSoundFilesPath = new System.Windows.Forms.Button();
+            this.alarmInfoBindingSource = new System.Windows.Forms.BindingSource(this.components);
+            this.idDataGridViewTextBoxColumn = new System.Windows.Forms.DataGridViewTextBoxColumn();
+            this.activeDataGridViewCheckBoxColumn = new System.Windows.Forms.DataGridViewCheckBoxColumn();
+            this.noteDataGridViewTextBoxColumn = new System.Windows.Forms.DataGridViewTextBoxColumn();
+            this.timeAtDataGridViewTextBoxColumn = new System.Windows.Forms.DataGridViewTextBoxColumn();
+            this.playSoundDataGridViewTextBoxColumn = new System.Windows.Forms.DataGridViewTextBoxColumn();
+            this.firedDataGridViewCheckBoxColumn = new System.Windows.Forms.DataGridViewCheckBoxColumn();
             ((System.ComponentModel.ISupportInitialize)(this.grdAlarms)).BeginInit();
+            ((System.ComponentModel.ISupportInitialize)(this.alarmInfoBindingSource)).BeginInit();
             this.SuspendLayout();
             // 
             // txtWhat
@@ -122,17 +125,21 @@
             this.grdAlarms.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
             | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
+            this.grdAlarms.AutoGenerateColumns = false;
             this.grdAlarms.BorderStyle = System.Windows.Forms.BorderStyle.Fixed3D;
             this.grdAlarms.CellBorderStyle = System.Windows.Forms.DataGridViewCellBorderStyle.SingleHorizontal;
             this.grdAlarms.ColumnHeadersHeightSizeMode = System.Windows.Forms.DataGridViewColumnHeadersHeightSizeMode.AutoSize;
             this.grdAlarms.Columns.AddRange(new System.Windows.Forms.DataGridViewColumn[] {
-            this.Active,
-            this.What,
-            this.Time,
-            this.Sound,
-            this.Fired});
+            this.idDataGridViewTextBoxColumn,
+            this.activeDataGridViewCheckBoxColumn,
+            this.noteDataGridViewTextBoxColumn,
+            this.timeAtDataGridViewTextBoxColumn,
+            this.playSoundDataGridViewTextBoxColumn,
+            this.firedDataGridViewCheckBoxColumn});
+            this.grdAlarms.DataSource = this.alarmInfoBindingSource;
             this.grdAlarms.Location = new System.Drawing.Point(278, 12);
             this.grdAlarms.Name = "grdAlarms";
+            this.grdAlarms.ReadOnly = true;
             this.grdAlarms.RowHeadersVisible = false;
             this.grdAlarms.Size = new System.Drawing.Size(942, 442);
             this.grdAlarms.TabIndex = 4;
@@ -167,38 +174,6 @@
             this.dtpAlarmTime.Size = new System.Drawing.Size(128, 20);
             this.dtpAlarmTime.TabIndex = 6;
             // 
-            // Active
-            // 
-            this.Active.AutoSizeMode = System.Windows.Forms.DataGridViewAutoSizeColumnMode.AllCells;
-            this.Active.HeaderText = "Active";
-            this.Active.Name = "Active";
-            this.Active.Width = 43;
-            // 
-            // What
-            // 
-            this.What.AutoSizeMode = System.Windows.Forms.DataGridViewAutoSizeColumnMode.Fill;
-            this.What.HeaderText = "What";
-            this.What.Name = "What";
-            // 
-            // Time
-            // 
-            this.Time.AutoSizeMode = System.Windows.Forms.DataGridViewAutoSizeColumnMode.AllCells;
-            this.Time.HeaderText = "Time";
-            this.Time.Name = "Time";
-            this.Time.Width = 55;
-            // 
-            // Sound
-            // 
-            this.Sound.AutoSizeMode = System.Windows.Forms.DataGridViewAutoSizeColumnMode.AllCells;
-            this.Sound.HeaderText = "Sound";
-            this.Sound.Name = "Sound";
-            this.Sound.Width = 63;
-            // 
-            // Fired
-            // 
-            this.Fired.HeaderText = "Fired";
-            this.Fired.Name = "Fired";
-            // 
             // btnSoundFilesPath
             // 
             this.btnSoundFilesPath.Location = new System.Drawing.Point(15, 161);
@@ -208,6 +183,63 @@
             this.btnSoundFilesPath.Text = "Sound Files Location";
             this.btnSoundFilesPath.UseVisualStyleBackColor = true;
             this.btnSoundFilesPath.Click += new System.EventHandler(this.btnSoundFilesPath_Click);
+            // 
+            // alarmInfoBindingSource
+            // 
+            this.alarmInfoBindingSource.DataSource = typeof(Reminder.AlarmInfo);
+            // 
+            // idDataGridViewTextBoxColumn
+            // 
+            this.idDataGridViewTextBoxColumn.AutoSizeMode = System.Windows.Forms.DataGridViewAutoSizeColumnMode.AllCells;
+            this.idDataGridViewTextBoxColumn.DataPropertyName = "Id";
+            this.idDataGridViewTextBoxColumn.HeaderText = "Id";
+            this.idDataGridViewTextBoxColumn.Name = "idDataGridViewTextBoxColumn";
+            this.idDataGridViewTextBoxColumn.ReadOnly = true;
+            this.idDataGridViewTextBoxColumn.Width = 41;
+            // 
+            // activeDataGridViewCheckBoxColumn
+            // 
+            this.activeDataGridViewCheckBoxColumn.AutoSizeMode = System.Windows.Forms.DataGridViewAutoSizeColumnMode.AllCells;
+            this.activeDataGridViewCheckBoxColumn.DataPropertyName = "Active";
+            this.activeDataGridViewCheckBoxColumn.HeaderText = "Active";
+            this.activeDataGridViewCheckBoxColumn.Name = "activeDataGridViewCheckBoxColumn";
+            this.activeDataGridViewCheckBoxColumn.ReadOnly = true;
+            this.activeDataGridViewCheckBoxColumn.Width = 43;
+            // 
+            // noteDataGridViewTextBoxColumn
+            // 
+            this.noteDataGridViewTextBoxColumn.AutoSizeMode = System.Windows.Forms.DataGridViewAutoSizeColumnMode.Fill;
+            this.noteDataGridViewTextBoxColumn.DataPropertyName = "Note";
+            this.noteDataGridViewTextBoxColumn.HeaderText = "Note";
+            this.noteDataGridViewTextBoxColumn.Name = "noteDataGridViewTextBoxColumn";
+            this.noteDataGridViewTextBoxColumn.ReadOnly = true;
+            // 
+            // timeAtDataGridViewTextBoxColumn
+            // 
+            this.timeAtDataGridViewTextBoxColumn.AutoSizeMode = System.Windows.Forms.DataGridViewAutoSizeColumnMode.AllCells;
+            this.timeAtDataGridViewTextBoxColumn.DataPropertyName = "TimeAt";
+            this.timeAtDataGridViewTextBoxColumn.HeaderText = "TimeAt";
+            this.timeAtDataGridViewTextBoxColumn.Name = "timeAtDataGridViewTextBoxColumn";
+            this.timeAtDataGridViewTextBoxColumn.ReadOnly = true;
+            this.timeAtDataGridViewTextBoxColumn.Width = 65;
+            // 
+            // playSoundDataGridViewTextBoxColumn
+            // 
+            this.playSoundDataGridViewTextBoxColumn.AutoSizeMode = System.Windows.Forms.DataGridViewAutoSizeColumnMode.AllCells;
+            this.playSoundDataGridViewTextBoxColumn.DataPropertyName = "PlaySound";
+            this.playSoundDataGridViewTextBoxColumn.HeaderText = "PlaySound";
+            this.playSoundDataGridViewTextBoxColumn.Name = "playSoundDataGridViewTextBoxColumn";
+            this.playSoundDataGridViewTextBoxColumn.ReadOnly = true;
+            this.playSoundDataGridViewTextBoxColumn.Width = 83;
+            // 
+            // firedDataGridViewCheckBoxColumn
+            // 
+            this.firedDataGridViewCheckBoxColumn.AutoSizeMode = System.Windows.Forms.DataGridViewAutoSizeColumnMode.AllCells;
+            this.firedDataGridViewCheckBoxColumn.DataPropertyName = "Fired";
+            this.firedDataGridViewCheckBoxColumn.HeaderText = "Fired";
+            this.firedDataGridViewCheckBoxColumn.Name = "firedDataGridViewCheckBoxColumn";
+            this.firedDataGridViewCheckBoxColumn.ReadOnly = true;
+            this.firedDataGridViewCheckBoxColumn.Width = 36;
             // 
             // fmReminder
             // 
@@ -229,6 +261,7 @@
             this.Text = "Reminder";
             this.Load += new System.EventHandler(this.fmReminder_Load);
             ((System.ComponentModel.ISupportInitialize)(this.grdAlarms)).EndInit();
+            ((System.ComponentModel.ISupportInitialize)(this.alarmInfoBindingSource)).EndInit();
             this.ResumeLayout(false);
             this.PerformLayout();
 
@@ -248,12 +281,14 @@
         private System.Windows.Forms.NotifyIcon nfyStart;
         private System.Windows.Forms.Timer timer1;
         private System.Windows.Forms.DateTimePicker dtpAlarmTime;
-        private System.Windows.Forms.DataGridViewCheckBoxColumn Active;
-        private System.Windows.Forms.DataGridViewTextBoxColumn What;
-        private System.Windows.Forms.DataGridViewTextBoxColumn Time;
-        private System.Windows.Forms.DataGridViewTextBoxColumn Sound;
-        private System.Windows.Forms.DataGridViewCheckBoxColumn Fired;
         private System.Windows.Forms.Button btnSoundFilesPath;
+        private System.Windows.Forms.DataGridViewTextBoxColumn idDataGridViewTextBoxColumn;
+        private System.Windows.Forms.DataGridViewCheckBoxColumn activeDataGridViewCheckBoxColumn;
+        private System.Windows.Forms.DataGridViewTextBoxColumn noteDataGridViewTextBoxColumn;
+        private System.Windows.Forms.DataGridViewTextBoxColumn timeAtDataGridViewTextBoxColumn;
+        private System.Windows.Forms.DataGridViewTextBoxColumn playSoundDataGridViewTextBoxColumn;
+        private System.Windows.Forms.DataGridViewCheckBoxColumn firedDataGridViewCheckBoxColumn;
+        private System.Windows.Forms.BindingSource alarmInfoBindingSource;
     }
 }
 

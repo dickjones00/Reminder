@@ -53,43 +53,58 @@ namespace Reminder
 
         private void RunReminder()
         {
-            List<AlarmInfo> allAlaramsThatNeedToBeFired = new List<AlarmInfo>();
+            //List<AlarmInfo> allAlaramsThatNeedToBeFired = new List<AlarmInfo>();
             foreach (DataGridViewRow row in grdAlarms.Rows)
             {
-                if (row.Cells["Time"].Value.ToString() == DateTime.Now.ToShortTimeString())
-                {
 
-                    bool fired = false;
-                    AlarmInfo ai = new AlarmInfo();
-                    ai.Active = Boolean.Parse(row.Cells["Active"].Value.ToString());
-                    ai.Note = row.Cells["What"].Value.ToString();
-                    ai.TimeAt = DateTime.Parse(row.Cells["Time"].Value.ToString());
-                    ai.PlaySound = row.Cells["Sound"].Value.ToString();
-                    fired = Boolean.Parse(row.Cells["Fired"].Value.ToString());     //Boolean.TryParse(row.Cells["Fired"].Value.ToString(), out fired);
-                    ai.Fired = fired;
-                    allAlaramsThatNeedToBeFired.Add(ai);
-                }
-                
-            }
-            foreach (var item in allAlaramsThatNeedToBeFired)
-            {
-                if (File.Exists(item.PlaySound))
+                string gridDate = ((DateTime)row.Cells["timeAtDataGridViewTextBoxColumn"].Value).ToString("g");
+                string realDate = DateTime.Now.ToString("g"); // "g" is for full date without seconds
+                if (gridDate == realDate && (bool)row.Cells["firedDataGridViewCheckBoxColumn"].Value == false)
                 {
                     SoundPlayer simpleSound = new SoundPlayer(lbFileList.SelectedItem.ToString());
                     simpleSound.Play();
-                    MessageBox.Show("Alarm sound playing for:\r\n" + item.Note + Environment.NewLine + "the sound:" + item.PlaySound
+                    MessageBox.Show("Alarm sound playing for:\r\n" 
+                                  + row.Cells["noteDataGridViewTextBoxColumn"].Value.ToString()
+                                  + Environment.NewLine + "the sound:" 
+                                  + row.Cells["playSoundDataGridViewTextBoxColumn"].Value.ToString()
                                     , "Alarm activated", MessageBoxButtons.OK, MessageBoxIcon.Exclamation);
-                    item.Fired = true;
+                    row.Cells["firedDataGridViewCheckBoxColumn"].Value = true;
+
+                    //bool fired = false;
+                    //AlarmInfo ai = new AlarmInfo();
+                    //ai.Active = Boolean.Parse(row.Cells["activeDataGridViewCheckBoxColumn"].Value.ToString());
+                    //ai.Note = row.Cells["noteDataGridViewTextBoxColumn"].Value.ToString();
+                    //ai.TimeAt = DateTime.Parse(row.Cells["timeAtDataGridViewTextBoxColumn"].Value.ToString());
+                    //ai.PlaySound = row.Cells["playSoundDataGridViewTextBoxColumn"].Value.ToString();
+                    //fired = Boolean.Parse(row.Cells["firedDataGridViewCheckBoxColumn"].Value.ToString());     //Boolean.TryParse(row.Cells["Fired"].Value.ToString(), out fired);
+                    //ai.Fired = fired;
+                    //allAlaramsThatNeedToBeFired.Add(ai);
                 }
-                else
+                var ddd = DateTime.Parse(gridDate);
+                var dfffdd = DateTime.Parse(realDate);
+                if (DateTime.Parse(gridDate) < DateTime.Parse(realDate) && (bool)row.Cells["firedDataGridViewCheckBoxColumn"].Value == false)
                 {
-                    MessageBox.Show("Alarm not activated because the file: " + item.PlaySound + " does not exist!"
-                                    , "Greška!", MessageBoxButtons.OK, MessageBoxIcon.Error);
-                    item.Fired = false;
-
+                    row.DefaultCellStyle.BackColor = Color.Red;
                 }
-
+                
             }
+            //foreach (var item in allAlaramsThatNeedToBeFired)
+            //{
+            //    if (File.Exists(item.PlaySound))
+            //    {
+                    
+                    
+            //        item.Fired = true;
+            //        grdAlarms.Refresh();
+                    
+            //    }
+            //    else
+            //    {
+            //        MessageBox.Show("Alarm not activated because the file: " + item.PlaySound + " does not exist!"
+            //                        , "Greška!", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            //        item.Fired = false;
+            //    }
+            //}
         }
 
         private void btnPlay_Click(object sender, EventArgs e)
@@ -108,8 +123,16 @@ namespace Reminder
                 {
                     wav = lbFileList.SelectedItem.ToString();
                 }
+                AlarmInfo aiAdd = new AlarmInfo();
+                aiAdd.Active = true;
+                aiAdd.Note = txtWhat.Text;
+                aiAdd.TimeAt = dtpAlarmTime.Value;
+                aiAdd.PlaySound = lbFileList.SelectedItem.ToString();
 
-                grdAlarms.Rows.Add(bool.TrueString, txtWhat.Text, dtpAlarmTime.Value.ToShortTimeString(), wav, bool.FalseString);
+                alarmInfoBindingSource.Add(aiAdd);
+                grdAlarms.DataSource = alarmInfoBindingSource;
+                grdAlarms.Refresh();
+                //grdAlarms.Rows.Add(bool.TrueString, txtWhat.Text, dtpAlarmTime.Value.ToShortTimeString(), wav, bool.FalseString);
             }
             else
             {
