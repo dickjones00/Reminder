@@ -58,6 +58,7 @@ namespace Reminder
             {
                 if (row.Cells["Time"].Value.ToString() == DateTime.Now.ToShortTimeString())
                 {
+
                     bool fired = false;
                     AlarmInfo ai = new AlarmInfo();
                     ai.Active = Boolean.Parse(row.Cells["Active"].Value.ToString());
