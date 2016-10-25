@@ -44,40 +44,83 @@ namespace Reminder
                 GetWavFiles(folder);
             }
             InitTimer();
+            if (File.Exists("xml.xml"))
+            {
+                DataSet ds = new DataSet();
+                ds.ReadXml("xml.xml");
+
+                alarmInfoBindingSource.DataSource = ds;
+                alarmInfoBindingSource.DataMember = ds.Tables[0].TableName;
+                grdAlarms.DataSource = alarmInfoBindingSource;
+            }
+            
         }
 
         private void RunReminder()
         {
             foreach (DataGridViewRow row in grdAlarms.Rows)
             {
-                string gridDate = ((DateTime)row.Cells["timeAtDataGridViewTextBoxColumn"].Value).ToString("g");
+                string gridDate="";
+                if (File.Exists("xml.xml"))
+                {
+                     gridDate = (row.Cells["timeAtDataGridViewTextBoxColumn"].Value).ToString();
+                }
+                else
+                {
+                     gridDate = ((DateTime)(row.Cells["timeAtDataGridViewTextBoxColumn"].Value)).ToString("g");
+                }
                 string realDate = DateTime.Now.ToString("g"); // "g" is for full date without seconds
                 if (gridDate == realDate && (bool)row.Cells["firedDataGridViewCheckBoxColumn"].Value == false)
                 {
-                    SoundPlayer simpleSound = new SoundPlayer(lbFileList.SelectedItem.ToString());
+                    SoundPlayer simpleSound = new SoundPlayer(lbFileList.SelectedValue.ToString());
                     simpleSound.Play();
                     row.DefaultCellStyle.BackColor = Color.LightGreen;
                     row.Cells["firedDataGridViewCheckBoxColumn"].Value = true;
                     row.Cells["activeDataGridViewCheckBoxColumn"].Value = false;
                     row.Cells["noteDataGridViewTextBoxColumn"].Value = row.Cells["noteDataGridViewTextBoxColumn"].Value + " - alarm fired";
-                    MessageBox.Show("Alarm sound playing for:\r\n" 
+                    MessageBox.Show("Alarm sound playing for:\r\n"
                                   + row.Cells["noteDataGridViewTextBoxColumn"].Value.ToString()
-                                  + Environment.NewLine + "the sound:" 
+                                  + Environment.NewLine + "the sound:"
                                   + row.Cells["playSoundDataGridViewTextBoxColumn"].Value.ToString()
                                     , "Alarm activated", MessageBoxButtons.OK, MessageBoxIcon.Exclamation);
                 }
                 var ddd = DateTime.Parse(gridDate);
                 var dfffdd = DateTime.Parse(realDate);
-                if (DateTime.Parse(gridDate) < DateTime.Parse(realDate) && (bool)row.Cells["firedDataGridViewCheckBoxColumn"].Value == false)
+                if (DateTime.Parse(gridDate) < DateTime.Parse(realDate) && row.Cells["firedDataGridViewCheckBoxColumn"].Value.ToString() == "false")
                 {
                     row.DefaultCellStyle.BackColor = Color.LightCoral;
                     row.Cells["activeDataGridViewCheckBoxColumn"].Value = false;
                     row.Cells["noteDataGridViewTextBoxColumn"].Value = row.Cells["noteDataGridViewTextBoxColumn"].Value + "- alarm not fired";
                 }
-                alarmInfoBindingSource = (BindingSource)grdAlarms.DataSource;
+                //alarmInfoBindingSource = (BindingSource)grdAlarms.DataSource;
             }
         }
 
+        private DataTable GetDataTableFromDGV(DataGridView dgv)
+        {
+            var dt = new DataTable();
+            foreach (DataGridViewColumn column in dgv.Columns)
+            {
+                if (column.Visible)
+                {
+                    // You could potentially name the column based on the DGV column name (beware of dupes)
+                    // or assign a type based on the data type of the data bound to this DGV column.
+                    dt.Columns.Add();
+                }
+            }
+
+            object[] cellValues = new object[dgv.Columns.Count];
+            foreach (DataGridViewRow row in dgv.Rows)
+            {
+                for (int i = 0; i < row.Cells.Count; i++)
+                {
+                    cellValues[i] = row.Cells[i].Value;
+                }
+                dt.Rows.Add(cellValues);
+            }
+
+            return dt;
+        }
         private void btnPlay_Click(object sender, EventArgs e)
         {
             SoundPlayer simpleSound = new SoundPlayer(lbFileList.SelectedValue.ToString());
@@ -97,12 +140,11 @@ namespace Reminder
                 aiAdd.Active = true;
                 aiAdd.Note = txtWhat.Text;
                 aiAdd.TimeAt = dtpAlarmTime.Value;
-                aiAdd.PlaySound = lbFileList.SelectedItem.ToString();
-
+                aiAdd.PlaySound = lbFileList.SelectedValue.ToString();
+                // create new datarow and fill it manually?
                 alarmInfoBindingSource.Add(aiAdd);
                 grdAlarms.DataSource = alarmInfoBindingSource;
                 grdAlarms.Refresh();
-                //grdAlarms.Rows.Add(bool.TrueString, txtWhat.Text, dtpAlarmTime.Value.ToShortTimeString(), wav, bool.FalseString);
             }
             else
             {
@@ -115,7 +157,7 @@ namespace Reminder
             nfyStart.Visible = true;
             nfyStart.ShowBalloonTip(500);
             this.Hide();
-            
+
         }
 
         private void nfyStart_MouseDoubleClick(object sender, MouseEventArgs e)
@@ -129,14 +171,14 @@ namespace Reminder
             FolderBrowserDialog ofd = new FolderBrowserDialog();
 
             //var tt = ofd.Container.Components;
-            
+
             if (ofd.ShowDialog() == DialogResult.OK)
             {
                 Properties.Settings.Default.SoundFiles = ofd.SelectedPath;
                 Properties.Settings.Default.Save();
                 string folder = Properties.Settings.Default.SoundFiles;
                 GetWavFiles(folder);
-                
+
             }
             else if (string.IsNullOrEmpty(Properties.Settings.Default.SoundFiles))
             {
@@ -175,6 +217,30 @@ namespace Reminder
         {
             Clipboard.SetText(lblSettings.Text);
             MessageBox.Show("Filepath copied to clipboard.");
+        }
+
+        private void fmReminder_FormClosing(object sender, FormClosingEventArgs e)
+        {
+            DataTable dt = new DataTable();
+            foreach (DataGridViewColumn col in grdAlarms.Columns)
+            {
+                dt.Columns.Add(col.HeaderText);
+            }
+
+            foreach (DataGridViewRow frow in grdAlarms.Rows)
+            {
+                DataRow dRow = dt.NewRow();
+                foreach (DataGridViewCell cell in frow.Cells)
+                {
+                    dRow[cell.ColumnIndex] = cell.Value;
+                }
+                dt.Rows.Add(dRow);
+            }
+            //After you have created this DataTable, create a DataSet and use WriteXml
+
+            DataSet ds = new DataSet();
+            ds.Tables.Add(dt);
+            ds.WriteXml("xml.xml");
         }
     }
 }
