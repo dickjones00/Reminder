@@ -10,6 +10,7 @@ using System.Media;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
+using System.Configuration;
 
 namespace Reminder
 {
@@ -40,78 +41,47 @@ namespace Reminder
             if (Properties.Settings.Default.SoundFiles != "")
             {
                 string folder = Properties.Settings.Default.SoundFiles;
-                string[] txtfiles = Directory.GetFiles(folder, "*.wav");
-                foreach (string filename in txtfiles)
-                {
-                    //string[] file = filename.Split('\\');
-                    lbFileList.Items.Add(filename);
-                }
-                lbFileList.SelectedIndex = 0;
+                GetWavFiles(folder);
             }
             InitTimer();
         }
 
         private void RunReminder()
         {
-            //List<AlarmInfo> allAlaramsThatNeedToBeFired = new List<AlarmInfo>();
             foreach (DataGridViewRow row in grdAlarms.Rows)
             {
-
                 string gridDate = ((DateTime)row.Cells["timeAtDataGridViewTextBoxColumn"].Value).ToString("g");
                 string realDate = DateTime.Now.ToString("g"); // "g" is for full date without seconds
                 if (gridDate == realDate && (bool)row.Cells["firedDataGridViewCheckBoxColumn"].Value == false)
                 {
                     SoundPlayer simpleSound = new SoundPlayer(lbFileList.SelectedItem.ToString());
                     simpleSound.Play();
+                    row.DefaultCellStyle.BackColor = Color.LightGreen;
+                    row.Cells["firedDataGridViewCheckBoxColumn"].Value = true;
+                    row.Cells["activeDataGridViewCheckBoxColumn"].Value = false;
+                    row.Cells["noteDataGridViewTextBoxColumn"].Value = row.Cells["noteDataGridViewTextBoxColumn"].Value + " - alarm fired";
                     MessageBox.Show("Alarm sound playing for:\r\n" 
                                   + row.Cells["noteDataGridViewTextBoxColumn"].Value.ToString()
                                   + Environment.NewLine + "the sound:" 
                                   + row.Cells["playSoundDataGridViewTextBoxColumn"].Value.ToString()
                                     , "Alarm activated", MessageBoxButtons.OK, MessageBoxIcon.Exclamation);
-                    row.Cells["firedDataGridViewCheckBoxColumn"].Value = true;
-
-                    //bool fired = false;
-                    //AlarmInfo ai = new AlarmInfo();
-                    //ai.Active = Boolean.Parse(row.Cells["activeDataGridViewCheckBoxColumn"].Value.ToString());
-                    //ai.Note = row.Cells["noteDataGridViewTextBoxColumn"].Value.ToString();
-                    //ai.TimeAt = DateTime.Parse(row.Cells["timeAtDataGridViewTextBoxColumn"].Value.ToString());
-                    //ai.PlaySound = row.Cells["playSoundDataGridViewTextBoxColumn"].Value.ToString();
-                    //fired = Boolean.Parse(row.Cells["firedDataGridViewCheckBoxColumn"].Value.ToString());     //Boolean.TryParse(row.Cells["Fired"].Value.ToString(), out fired);
-                    //ai.Fired = fired;
-                    //allAlaramsThatNeedToBeFired.Add(ai);
                 }
                 var ddd = DateTime.Parse(gridDate);
                 var dfffdd = DateTime.Parse(realDate);
                 if (DateTime.Parse(gridDate) < DateTime.Parse(realDate) && (bool)row.Cells["firedDataGridViewCheckBoxColumn"].Value == false)
                 {
-                    row.DefaultCellStyle.BackColor = Color.Red;
+                    row.DefaultCellStyle.BackColor = Color.LightCoral;
+                    row.Cells["activeDataGridViewCheckBoxColumn"].Value = false;
+                    row.Cells["noteDataGridViewTextBoxColumn"].Value = row.Cells["noteDataGridViewTextBoxColumn"].Value + "- alarm not fired";
                 }
-                
+                alarmInfoBindingSource = (BindingSource)grdAlarms.DataSource;
             }
-            //foreach (var item in allAlaramsThatNeedToBeFired)
-            //{
-            //    if (File.Exists(item.PlaySound))
-            //    {
-                    
-                    
-            //        item.Fired = true;
-            //        grdAlarms.Refresh();
-                    
-            //    }
-            //    else
-            //    {
-            //        MessageBox.Show("Alarm not activated because the file: " + item.PlaySound + " does not exist!"
-            //                        , "Greška!", MessageBoxButtons.OK, MessageBoxIcon.Error);
-            //        item.Fired = false;
-            //    }
-            //}
         }
 
         private void btnPlay_Click(object sender, EventArgs e)
         {
-            SoundPlayer simpleSound = new SoundPlayer(lbFileList.SelectedItem.ToString());
+            SoundPlayer simpleSound = new SoundPlayer(lbFileList.SelectedValue.ToString());
             simpleSound.Play();
-
         }
 
         private void btnSave_Click(object sender, EventArgs e)
@@ -157,22 +127,54 @@ namespace Reminder
         private void btnSoundFilesPath_Click(object sender, EventArgs e)
         {
             FolderBrowserDialog ofd = new FolderBrowserDialog();
-            
+
             //var tt = ofd.Container.Components;
-            ofd.ShowDialog();
-            Properties.Settings.Default.SoundFiles = ofd.SelectedPath;
-            Properties.Settings.Default.Save();
-            //Reminder.Properties.Settings.Default.SoundFiles = ofd.SelectedPath;
-            string folder = Properties.Settings.Default.SoundFiles;
-            string[] txtfiles = Directory.GetFiles(folder, "*.wav");
-            lbFileList.Items.Clear();
-            foreach (string filename in txtfiles)
+            
+            if (ofd.ShowDialog() == DialogResult.OK)
             {
-                //string[] file = filename.Split('\\');
+                Properties.Settings.Default.SoundFiles = ofd.SelectedPath;
+                Properties.Settings.Default.Save();
+                string folder = Properties.Settings.Default.SoundFiles;
+                GetWavFiles(folder);
                 
-                lbFileList.Items.Add(filename);
             }
-            lbFileList.SelectedIndex = 0;
+            else if (string.IsNullOrEmpty(Properties.Settings.Default.SoundFiles))
+            {
+                lblFolder.Text = "Folder not selected!";
+                lblFolder.ForeColor = Color.LightCoral;
+            }
+        }
+
+        private void GetWavFiles(string folder)
+        {
+            Dictionary<string, string> ff = new Dictionary<string, string>();
+            lblFolder.ForeColor = Color.Blue;
+
+            DirectoryInfo dinfo = new DirectoryInfo(folder);
+            FileInfo[] files = dinfo.GetFiles("*.wav");
+            foreach (FileInfo filename in files)
+            {
+                ff.Add(filename.Name, filename.FullName);
+            }
+
+            lbFileList.DataSource = new BindingSource(ff, null);
+            lbFileList.DisplayMember = "Key";
+            lbFileList.ValueMember = "Value";
+            var sss = lbFileList.DataBindings;
+            lbFileList.Refresh();
+
+            if (files.Count() > 0)
+            {
+                lbFileList.SelectedIndex = 0;
+            }
+            lblFolder.Text = Properties.Settings.Default.SoundFiles;
+            lblSettings.Text = ConfigurationManager.OpenExeConfiguration(ConfigurationUserLevel.PerUserRoamingAndLocal).FilePath;
+        }
+
+        private void lblSettings_Click(object sender, EventArgs e)
+        {
+            Clipboard.SetText(lblSettings.Text);
+            MessageBox.Show("Filepath copied to clipboard.");
         }
     }
 }
