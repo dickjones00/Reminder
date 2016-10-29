@@ -14,11 +14,13 @@ using System.Configuration;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 
+
 namespace Reminder
 {
 
     public partial class fmReminder : Form
     {
+        DataTable tbl = new DataTable();
         public void InitTimer()
         {
             timer1 = new Timer();
@@ -50,102 +52,117 @@ namespace Reminder
             {
                 try
                 {
-                    DataTable tbl = new DataTable();
-
                     tbl.TableName = "AlarmInfo";
                     tbl.ReadXml("xml.xml");
-                    grdAlarms.DataSource = tbl;
+
                 }
                 catch (Exception ex)
                 {
 
                     throw new Exception(ex.Message);
                 }
-                
+
+            }
+            else
+            {
+                AlarmInfo ai = new AlarmInfo();
+                try
+                {
+                    tbl.Columns.Add("id", typeof(string));
+                    tbl.Columns.Add("active", typeof(bool));
+                    tbl.Columns.Add("note", typeof(string));
+                    tbl.Columns.Add("timeAt", typeof(DateTime));
+                    tbl.Columns.Add("playSound", typeof(string));
+                    tbl.Columns.Add("fired", typeof(bool));
+                }
+                catch (Exception ec)
+                {
+
+                    throw new Exception(ec.Message);
+                }
+
+            }
+            foreach (DataGridViewColumn column in grdAlarms.Columns)
+            {
+                column.AutoSizeMode = DataGridViewAutoSizeColumnMode.DisplayedCells;
+                if (column.DataPropertyName == "Note")
+                {
+                    column.AutoSizeMode = DataGridViewAutoSizeColumnMode.Fill;
+                }
+            }
+            grdAlarms.DataSource = tbl;
+
+            ColorDataGridView();
+        }
+
+        private void ColorDataGridView()
+        {
+            foreach (DataGridViewRow row in grdAlarms.Rows)
+            {
+                var idDG = row.Cells["idDataGridViewTextBoxColumn1"].Value.ToString();
+                var activeDG = (bool)row.Cells["activeDataGridViewCheckBoxColumn1"].Value;
+                var noteDG = row.Cells["noteDataGridViewTextBoxColumn1"].Value.ToString();
+                var timeAtDG = row.Cells["timeAtDataGridViewTextBoxColumn1"].Value.ToString();
+                var playSoundDG = row.Cells["playSoundDataGridViewTextBoxColumn1"].Value.ToString();
+                var firedDG = (bool)row.Cells["firedDataGridViewCheckBoxColumn1"].Value;
+
+                string str = timeAtDG;
+                string gridDate = str.Substring(0, str.Length - 3);
+
+                string realDate = DateTime.Now.ToString("g"); // "g" is for full date without seconds
+                if (((DateTime.Parse(gridDate) < DateTime.Parse(realDate)) && (bool)activeDG == true) || (bool)activeDG == false && (bool)firedDG == false)
+                {
+                    row.DefaultCellStyle.BackColor = Color.LightCoral;
+                    row.Cells["activeDataGridViewCheckBoxColumn1"].Value = false;
+                }
+                if ((DateTime.Parse(gridDate) < DateTime.Parse(realDate)) && (bool)firedDG == true)
+                {
+                    row.DefaultCellStyle.BackColor = Color.LightGreen;
+                    row.Cells["activeDataGridViewCheckBoxColumn1"].Value = true;
+                }
             }
         }
 
         private void RunReminder()
         {
-            foreach (DataGridViewRow row in grdAlarms.Rows)
+            if (grdAlarms.Rows.Count > 0)
             {
-                string gridDate = "";
-                if (File.Exists("xml.xml"))
+                foreach (DataGridViewRow row in grdAlarms.Rows)
                 {
-                    string str = row.Cells["timeAt"].Value.ToString();
-                    gridDate = str.Substring(0, str.Length - 3);
+                    string str = row.Cells["timeAtDataGridViewTextBoxColumn1"].Value.ToString();
+                    string gridDate = str.Substring(0, str.Length - 3);
+
+                    string realDate = DateTime.Now.ToString("g"); // "g" is for full date without seconds
+
+                    if (gridDate == realDate && (bool)row.Cells["activeDataGridViewCheckBoxColumn1"].Value == true)
+                    {
+                        SoundPlayer simpleSound = new SoundPlayer(lbFileList.SelectedValue.ToString());
+                        simpleSound.Play();
+                        row.DefaultCellStyle.BackColor = Color.LightGreen;
+                        row.Cells["firedDataGridViewCheckBoxColumn1"].Value = true;
+                        row.Cells["activeDataGridViewCheckBoxColumn1"].Value = false;
+                        MessageBox.Show("Alarm sound playing for:\r\n"
+                                      + row.Cells["noteDataGridViewTextBoxColumn1"].Value.ToString()
+                                      + Environment.NewLine + "the sound:"
+                                      + row.Cells["playSoundDataGridViewTextBoxColumn1"].Value.ToString()
+                                        , "Alarm activated", MessageBoxButtons.OK, MessageBoxIcon.Exclamation);
+                        simpleSound.Stop();
+                    }
+
+                    ColorDataGridView();
+                    tbl = (DataTable)grdAlarms.DataSource;
                 }
-                else
-                {
-                    gridDate = ((DateTime)(row.Cells["timeAt"].Value)).ToString("g");
-                }
-                string realDate = DateTime.Now.ToString("g"); // "g" is for full date without seconds
-                if (gridDate == realDate && (bool)row.Cells["active"].Value == true)
-                {
-                    SoundPlayer simpleSound = new SoundPlayer(lbFileList.SelectedValue.ToString());
-                    simpleSound.Play();
-                    row.DefaultCellStyle.BackColor = Color.LightGreen;
-                    row.Cells["fired"].Value = true;
-                    row.Cells["active"].Value = false;
-                    row.Cells["note"].Value = row.Cells["note"].Value + " - alarm fired";
-                    MessageBox.Show("Alarm sound playing for:\r\n"
-                                  + row.Cells["note"].Value.ToString()
-                                  + Environment.NewLine + "the sound:"
-                                  + row.Cells["playSound"].Value.ToString()
-                                    , "Alarm activated", MessageBoxButtons.OK, MessageBoxIcon.Exclamation);
-                }
-                var ddd = DateTime.Parse(gridDate);
-                var dfffdd = DateTime.Parse(realDate);
-                if (DateTime.Parse(gridDate) < DateTime.Parse(realDate) && row.Cells["active"].Value.ToString() == "True")
-                {
-                    row.DefaultCellStyle.BackColor = Color.LightCoral;
-                    row.Cells["active"].Value = false;
-                    row.Cells["note"].Value = row.Cells["note"].Value + "- alarm not fired";
-                }
-                //alarmInfoBindingSource = (BindingSource)grdAlarms.DataSource;
             }
         }
 
-        private DataTable GetDataTableFromDGV(DataGridView dgv)
-        {
-            var dt = new DataTable();
-            foreach (DataGridViewColumn column in dgv.Columns)
-            {
-                if (column.Visible)
-                {
-                    // You could potentially name the column based on the DGV column name (beware of dupes)
-                    // or assign a type based on the data type of the data bound to this DGV column.
-                    dt.Columns.Add();
-                }
-            }
-
-            object[] cellValues = new object[dgv.Columns.Count];
-            foreach (DataGridViewRow row in dgv.Rows)
-            {
-                for (int i = 0; i < row.Cells.Count; i++)
-                {
-                    cellValues[i] = row.Cells[i].Value;
-                }
-                dt.Rows.Add(cellValues);
-            }
-
-            return dt;
-        }
         private void btnPlay_Click(object sender, EventArgs e)
         {
-            DataTable tbl = new DataTable();
-
-            tbl.TableName = "AlarmInfo";
-            tbl.ReadXml("xml.xml");
-            grdAlarms.DataSource = tbl;
-            grdAlarms.Refresh();
-            //SoundPlayer simpleSound = new SoundPlayer(lbFileList.SelectedValue.ToString());
-            //simpleSound.Play();
+            SoundPlayer simpleSound = new SoundPlayer(lbFileList.SelectedValue.ToString());
+            simpleSound.Play();
         }
 
         private void btnSave_Click(object sender, EventArgs e)
         {
-            //List<AlarmInfo> ai = new List<AlarmInfo>();
             string wav = "";
             if (txtWhat.Text != "")
             {
@@ -154,38 +171,28 @@ namespace Reminder
                     wav = lbFileList.SelectedItem.ToString();
                 }
                 AlarmInfo aiAdd = new AlarmInfo();
+                aiAdd.Id = tbl.Rows.Count + 1;
                 aiAdd.Active = true;
                 aiAdd.Note = txtWhat.Text;
                 aiAdd.TimeAt = dtpAlarmTime.Value;
                 aiAdd.PlaySound = lbFileList.SelectedValue.ToString();
                 aiAdd.Fired = false;
+                //grdAlarms.DataSource = aiAdd;
+                DataRow row = tbl.NewRow();
 
-                alarmInfoBindingSource.Add(aiAdd);
-                
-                //ai.Add(aiAdd);
-                //string json = JsonConvert.SerializeObject(aiAdd);
-                //AlarmInfo myDeserializedObjList = (AlarmInfo)JsonConvert.DeserializeObject(json);
-                ////AlarmInfo alarmInfo = JsonConvert.DeserializeObject<AlarmInfo>(json);
-                //AlarmInfo myDeserializedObj = (AlarmInfo)JsonConvert.DeserializeObject(json, typeof(AlarmInfo));
-                //JArray jsonResponse = JArray.Parse(json);
-
-
-                //foreach (var item in jsonResponse)
-                //{
-                //    JObject jRaces = (JObject)item["AlarmInfo"];
-                //    foreach (var rItem in jRaces)
-                //    {
-                //        string rItemKey = rItem.Key;
-                //        JObject rItemValueJson = (JObject)rItem.Value;
-                //        AlarmInfo rowsResult = Newtonsoft.Json.JsonConvert.DeserializeObject<AlarmInfo>(rItemValueJson.ToString());
-                //    }
-                //}
-                grdAlarms.DataSource = alarmInfoBindingSource;
+                row["id"] = aiAdd.Id;
+                row["active"] = aiAdd.Active;
+                row["note"] = aiAdd.Note;
+                row["timeAt"] = aiAdd.TimeAt;
+                row["playSound"] = aiAdd.PlaySound;
+                row["fired"] = aiAdd.Fired;
+                tbl.Rows.Add(row);
+                grdAlarms.DataSource = tbl;
                 grdAlarms.Refresh();
             }
             else
             {
-                MessageBox.Show("Enter something ti remind about");
+                MessageBox.Show("Enter something to remind about");
                 txtWhat.Focus();
             }
         }
@@ -207,8 +214,6 @@ namespace Reminder
         private void btnSoundFilesPath_Click(object sender, EventArgs e)
         {
             FolderBrowserDialog ofd = new FolderBrowserDialog();
-
-            //var tt = ofd.Container.Components;
 
             if (ofd.ShowDialog() == DialogResult.OK)
             {
@@ -256,133 +261,76 @@ namespace Reminder
             Clipboard.SetText(lblSettings.Text);
             MessageBox.Show("Filepath copied to clipboard.");
         }
+
         public DataTable gridviewToDataTable(DataGridView gv)
         {
-
-            DataTable dtCalculate = new DataTable("TableCalculator");
+            DataTable dtCalculate = new DataTable("AlarmInfo");
 
             // Create Column 1: Date
-            DataColumn dateColumn = new DataColumn();
-            dateColumn.DataType = Type.GetType("System.DateTime");
-            dateColumn.ColumnName = "date";
+            DataColumn idColumn = new DataColumn();
+            idColumn.DataType = Type.GetType("System.String");
+            idColumn.ColumnName = "id";
 
             // Create Column 3: TotalSales
-            DataColumn loanBalanceColumn = new DataColumn();
-            loanBalanceColumn.DataType = Type.GetType("System.Double");
-            loanBalanceColumn.ColumnName = "loanbalance";
+            DataColumn activeColumn = new DataColumn();
+            activeColumn.DataType = Type.GetType("System.Boolean");
+            activeColumn.ColumnName = "active";
 
 
-            DataColumn offsetBalanceColumn = new DataColumn();
-            offsetBalanceColumn.DataType = Type.GetType("System.Double");
-            offsetBalanceColumn.ColumnName = "offsetbalance";
+            DataColumn noteColumn = new DataColumn();
+            noteColumn.DataType = Type.GetType("System.String");
+            noteColumn.ColumnName = "note";
 
 
-            DataColumn netloanColumn = new DataColumn();
-            netloanColumn.DataType = Type.GetType("System.Double");
-            netloanColumn.ColumnName = "netloan";
+            DataColumn timeAtColumn = new DataColumn();
+            timeAtColumn.DataType = Type.GetType("System.DateTime");
+            timeAtColumn.ColumnName = "timeAt";
 
 
-            DataColumn interestratecolumn = new DataColumn();
-            interestratecolumn.DataType = Type.GetType("System.Double");
-            interestratecolumn.ColumnName = "interestrate";
+            DataColumn playSoundColumn = new DataColumn();
+            playSoundColumn.DataType = Type.GetType("System.String");
+            playSoundColumn.ColumnName = "playSound";
 
-            DataColumn interestrateperdaycolumn = new DataColumn();
-            interestrateperdaycolumn.DataType = Type.GetType("System.Double");
-            interestrateperdaycolumn.ColumnName = "interestrateperday";
+            DataColumn firedColumn = new DataColumn();
+            firedColumn.DataType = Type.GetType("System.Boolean");
+            firedColumn.ColumnName = "fired";
 
             // Add the columns to the ProductSalesData DataTable
-            dtCalculate.Columns.Add(dateColumn);
-            dtCalculate.Columns.Add(loanBalanceColumn);
-            dtCalculate.Columns.Add(offsetBalanceColumn);
-            dtCalculate.Columns.Add(netloanColumn);
-            dtCalculate.Columns.Add(interestratecolumn);
-            dtCalculate.Columns.Add(interestrateperdaycolumn);
+            dtCalculate.Columns.Add(idColumn);
+            dtCalculate.Columns.Add(activeColumn);
+            dtCalculate.Columns.Add(noteColumn);
+            dtCalculate.Columns.Add(timeAtColumn);
+            dtCalculate.Columns.Add(playSoundColumn);
+            dtCalculate.Columns.Add(firedColumn);
 
             foreach (DataGridViewRow row in gv.Rows)
             {
                 DataRow dr;
                 dr = dtCalculate.NewRow();
-
-                dr["id"] = DateTime.Parse(row.Cells[0].Value.ToString());
-                dr["active"] = double.Parse(row.Cells[1].Value.ToString());
-                dr["note"] = double.Parse(row.Cells[2].Value.ToString());
-                dr["timeat"] = double.Parse(row.Cells[3].Value.ToString());
-                dr["playsound"] = double.Parse(row.Cells[4].Value.ToString());
-                dr["fired"] = double.Parse(row.Cells[5].Value.ToString());
-
+                dr["id"] = row.Cells[0].Value.ToString();
+                dr["active"] = bool.Parse(row.Cells[1].Value.ToString());
+                dr["note"] = row.Cells[2].Value.ToString();
+                dr["timeAt"] = DateTime.Parse(row.Cells[3].Value.ToString());
+                dr["playSound"] = row.Cells[4].Value.ToString();
+                dr["fired"] = bool.Parse(row.Cells[5].Value.ToString());
 
                 dtCalculate.Rows.Add(dr);
             }
-
-
-
             return dtCalculate;
         }
+
         private void fmReminder_FormClosing(object sender, FormClosingEventArgs e)
         {
-            string fileName = @"xml.xml";
+            string fileName = "xml.xml";
             try
             {
-                DataTable tbl = grdAlarms.DataSource as DataTable;
-                var dfa = GetDataTableFromDGV(grdAlarms);
-                dfa.TableName = "AlarmInfo";
-                dfa.WriteXml("xml.xml");
-            //    DataSet dataSet =GetDataTableFromDGV(grdAlarms);
-            //    dataSet.WriteXml(fileName);
+                tbl.TableName = "AlarmInfo";
+                tbl.WriteXml(fileName, XmlWriteMode.WriteSchema, true);
             }
             catch (Exception ex)
             {
-
                 throw new Exception(ex.Message);
             }
-            
-            
-
-            //string file = "d:\\mygrid.bin";
-            //using (BinaryWriter bw = new BinaryWriter(File.Open(file, FileMode.Create)))
-            //{
-            //    bw.Write(grdAlarms.Columns.Count);
-            //    bw.Write(grdAlarms.Rows.Count);
-            //    foreach (DataGridViewRow dgvR in grdAlarms.Rows)
-            //    {
-            //        for (int j = 0; j < grdAlarms.Columns.Count; ++j)
-            //        {
-            //            object val = dgvR.Cells[j].Value;
-            //            if (val == null)
-            //            {
-            //                bw.Write(false);
-            //                bw.Write(false);
-            //            }
-            //            else
-            //            {
-            //                bw.Write(true);
-            //                bw.Write(val.ToString());
-            //            }
-            //        }
-            //    }
-
-
-            //DataTable dt = new DataTable();
-            //foreach (DataGridViewColumn col in grdAlarms.Columns)
-            //{
-            //    dt.Columns.Add(col.HeaderText);
-            //}
-
-            //foreach (DataGridViewRow frow in grdAlarms.Rows)
-            //{
-            //    DataRow dRow = dt.NewRow();
-            //    foreach (DataGridViewCell cell in frow.Cells)
-            //    {
-            //        dRow[cell.ColumnIndex] = cell.Value;
-            //    }
-            //    dt.Rows.Add(dRow);
-            //}
-            ////After you have created this DataTable, create a DataSet and use WriteXml
-
-            //DataSet ds = new DataSet();
-            //ds.Tables.Add(dt);
-            //ds.WriteXml("xml.xml");
-        
         }
     }
 }

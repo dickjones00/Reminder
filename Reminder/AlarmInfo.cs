@@ -12,7 +12,7 @@ namespace Reminder
             this.Id = System.Threading.Interlocked.Increment(ref m_Counter);
         }
         [JsonProperty(PropertyName = "Id")]
-        public int Id { get; private set; }
+        public int Id { get; set; }
         [JsonProperty(PropertyName = "Active")]
         public bool Active { get; set; }
         [JsonProperty(PropertyName = "Note")]
