@@ -37,6 +37,8 @@
             this.btnPlay = new System.Windows.Forms.Button();
             this.btnSave = new System.Windows.Forms.Button();
             this.grdAlarms = new System.Windows.Forms.DataGridView();
+            this.cmsGridRightClick = new System.Windows.Forms.ContextMenuStrip(this.components);
+            this.deleteToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.btnStart = new System.Windows.Forms.Button();
             this.nfyStart = new System.Windows.Forms.NotifyIcon(this.components);
             this.timer1 = new System.Windows.Forms.Timer(this.components);
@@ -60,6 +62,7 @@
             this.firedDataGridViewCheckBoxColumn1 = new System.Windows.Forms.DataGridViewCheckBoxColumn();
             this.alarmInfoBindingSource = new System.Windows.Forms.BindingSource(this.components);
             ((System.ComponentModel.ISupportInitialize)(this.grdAlarms)).BeginInit();
+            this.cmsGridRightClick.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.alarmInfoBindingSource)).BeginInit();
             this.SuspendLayout();
             // 
@@ -138,12 +141,32 @@
             this.timeAtDataGridViewTextBoxColumn1,
             this.playSoundDataGridViewTextBoxColumn1,
             this.firedDataGridViewCheckBoxColumn1});
+            this.grdAlarms.ContextMenuStrip = this.cmsGridRightClick;
             this.grdAlarms.DataSource = this.alarmInfoBindingSource;
             this.grdAlarms.Location = new System.Drawing.Point(278, 12);
             this.grdAlarms.Name = "grdAlarms";
             this.grdAlarms.RowHeadersVisible = false;
+            this.grdAlarms.RowTemplate.DefaultCellStyle.SelectionBackColor = System.Drawing.SystemColors.ActiveCaptionText;
+            this.grdAlarms.RowTemplate.DefaultCellStyle.SelectionForeColor = System.Drawing.Color.LightGreen;
+            this.grdAlarms.SelectionMode = System.Windows.Forms.DataGridViewSelectionMode.FullRowSelect;
             this.grdAlarms.Size = new System.Drawing.Size(942, 442);
             this.grdAlarms.TabIndex = 4;
+            this.grdAlarms.MouseDown += new System.Windows.Forms.MouseEventHandler(this.grdAlarms_MouseDown);
+            // 
+            // cmsGridRightClick
+            // 
+            this.cmsGridRightClick.DropShadowEnabled = false;
+            this.cmsGridRightClick.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
+            this.deleteToolStripMenuItem});
+            this.cmsGridRightClick.Name = "cmsGridRightClick";
+            this.cmsGridRightClick.ShowItemToolTips = false;
+            this.cmsGridRightClick.Size = new System.Drawing.Size(108, 26);
+            // 
+            // deleteToolStripMenuItem
+            // 
+            this.deleteToolStripMenuItem.Name = "deleteToolStripMenuItem";
+            this.deleteToolStripMenuItem.Size = new System.Drawing.Size(107, 22);
+            this.deleteToolStripMenuItem.Text = "Delete";
             // 
             // btnStart
             // 
@@ -201,6 +224,7 @@
             this.lblSettings.Size = new System.Drawing.Size(260, 45);
             this.lblSettings.TabIndex = 1;
             this.lblSettings.Text = "Choose folder";
+            this.lblSettings.Visible = false;
             this.lblSettings.Click += new System.EventHandler(this.lblSettings_Click);
             // 
             // idDataGridViewTextBoxColumn
@@ -334,6 +358,7 @@
             this.FormClosing += new System.Windows.Forms.FormClosingEventHandler(this.fmReminder_FormClosing);
             this.Load += new System.EventHandler(this.fmReminder_Load);
             ((System.ComponentModel.ISupportInitialize)(this.grdAlarms)).EndInit();
+            this.cmsGridRightClick.ResumeLayout(false);
             ((System.ComponentModel.ISupportInitialize)(this.alarmInfoBindingSource)).EndInit();
             this.ResumeLayout(false);
             this.PerformLayout();
@@ -371,6 +396,8 @@
         private System.Windows.Forms.DataGridViewCheckBoxColumn firedDataGridViewCheckBoxColumn1;
         private System.Windows.Forms.CheckBox chkSelectSound;
         private System.Windows.Forms.CheckBox chkSayWhat;
+        private System.Windows.Forms.ContextMenuStrip cmsGridRightClick;
+        private System.Windows.Forms.ToolStripMenuItem deleteToolStripMenuItem;
     }
 }
 

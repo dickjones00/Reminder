@@ -14,7 +14,6 @@ using System.Speech.Synthesis;
 
 namespace Reminder
 {
-
     public partial class fmReminder : Form
     {
         DataTable tbl = new DataTable();
@@ -37,9 +36,10 @@ namespace Reminder
         }
         private void fmReminder_Load(object sender, EventArgs e)
         {
+            this.deleteToolStripMenuItem.Click += new System.EventHandler(this.DeleteRow_Click);
             dtpAlarmTime.Format = DateTimePickerFormat.Time;
             dtpAlarmTime.ShowUpDown = true;
-            
+
             if ((bool)Properties.Settings.Default.ReadText)
             {
                 chkSayWhat.Checked = true;
@@ -149,15 +149,20 @@ namespace Reminder
                             SpeechSynthesizer rdr = new SpeechSynthesizer();
                             rdr.SpeakAsync(row.Cells["noteDataGridViewTextBoxColumn1"].Value.ToString());
                         }
-                        
+
                         row.DefaultCellStyle.BackColor = Color.LightGreen;
                         row.Cells["firedDataGridViewCheckBoxColumn1"].Value = true;
                         row.Cells["activeDataGridViewCheckBoxColumn1"].Value = false;
-                        CustomMessageBox.MyMessageBox.ShowBox("Alarm sound playing for:\r\n"
-                                      + row.Cells["noteDataGridViewTextBoxColumn1"].Value.ToString()
-                                      + Environment.NewLine + "the sound:"
-                                      + row.Cells["playSoundDataGridViewTextBoxColumn1"].Value.ToString()
-                                        , "Alarm activated"); // OK button returns string "1"
+                        var theMessage = "Alarm sound playing for:"
+                                         + Environment.NewLine + row.Cells["noteDataGridViewTextBoxColumn1"].Value.ToString()
+                                         + Environment.NewLine + "and the sound is:"
+                                         + Environment.NewLine + row.Cells["playSoundDataGridViewTextBoxColumn1"].Value.ToString();
+                        if (Properties.Settings.Default.ReadText)
+                        {
+                            theMessage = "Reading the note:\"" + row.Cells["noteDataGridViewTextBoxColumn1"].Value.ToString() + "\"";
+                        }
+
+                        CustomMessageBox.MyMessageBox.ShowBox(theMessage, "Alarm activated"); // OK button returns string "1"
 
                         //MessageBox.Show("Alarm sound playing for:\r\n"
                         //              + row.Cells["noteDataGridViewTextBoxColumn1"].Value.ToString()
@@ -258,7 +263,7 @@ namespace Reminder
             lblFolder.ForeColor = Color.Blue;
 
             DirectoryInfo dinfo = new DirectoryInfo(folder);
-            string[] extensions = new[] { ".mp3", ".wav"};
+            string[] extensions = new[] { ".mp3", ".wav" };
             FileInfo[] files = dinfo.GetFiles("*.mp3", SearchOption.AllDirectories);
             files = dinfo.GetFiles().Where(f => extensions.Contains(f.Extension.ToLower())).ToArray();
             foreach (FileInfo filename in files)
@@ -333,8 +338,32 @@ namespace Reminder
             {
                 lbFileList.Enabled = true;
                 chkSelectSound.Checked = true;
-                txtWhat.Enabled = false;
+                txtWhat.Enabled = true;
                 Properties.Settings.Default.ReadText = false;
+            }
+        }
+
+        private void grdAlarms_MouseDown(object sender, MouseEventArgs e)
+        {
+            if (e.Button == MouseButtons.Right)
+            {
+                var hti = grdAlarms.HitTest(e.X, e.Y);
+                grdAlarms.ClearSelection();
+                grdAlarms.Rows[hti.RowIndex].Selected = true;
+            }
+        }
+
+        private void DeleteRow_Click(object sender, EventArgs e)
+        {
+            Int32 rowToDelete = grdAlarms.Rows.GetFirstRow(DataGridViewElementStates.Selected);
+            grdAlarms.Rows.RemoveAt(rowToDelete);
+            grdAlarms.ClearSelection();
+            var i = 1;
+            foreach (DataGridViewRow item in grdAlarms.Rows)
+            {
+                item.Cells[0].Value = i.ToString();
+                
+                i++;
             }
         }
     }
