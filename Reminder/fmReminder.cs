@@ -7,13 +7,10 @@ using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Media;
-using System.Text;
-using System.Threading.Tasks;
 using System.Windows.Forms;
 using System.Configuration;
-using Newtonsoft.Json;
-using Newtonsoft.Json.Linq;
-
+using WMPLib;
+using System.Speech.Synthesis;
 
 namespace Reminder
 {
@@ -42,6 +39,17 @@ namespace Reminder
         {
             dtpAlarmTime.Format = DateTimePickerFormat.Time;
             dtpAlarmTime.ShowUpDown = true;
+            
+            if ((bool)Properties.Settings.Default.ReadText)
+            {
+                chkSayWhat.Checked = true;
+                chkSelectSound.Checked = false;
+            }
+            else
+            {
+                chkSayWhat.Checked = false;
+                chkSelectSound.Checked = true;
+            }
             if (Properties.Settings.Default.SoundFiles != "")
             {
                 string folder = Properties.Settings.Default.SoundFiles;
@@ -54,14 +62,11 @@ namespace Reminder
                 {
                     tbl.TableName = "AlarmInfo";
                     tbl.ReadXml("xml.xml");
-
                 }
                 catch (Exception ex)
                 {
-
                     throw new Exception(ex.Message);
                 }
-
             }
             else
             {
@@ -77,7 +82,6 @@ namespace Reminder
                 }
                 catch (Exception ec)
                 {
-
                     throw new Exception(ec.Message);
                 }
 
@@ -99,26 +103,26 @@ namespace Reminder
         {
             foreach (DataGridViewRow row in grdAlarms.Rows)
             {
-                var idDG = row.Cells["idDataGridViewTextBoxColumn1"].Value.ToString();
-                var activeDG = (bool)row.Cells["activeDataGridViewCheckBoxColumn1"].Value;
-                var noteDG = row.Cells["noteDataGridViewTextBoxColumn1"].Value.ToString();
-                var timeAtDG = row.Cells["timeAtDataGridViewTextBoxColumn1"].Value.ToString();
-                var playSoundDG = row.Cells["playSoundDataGridViewTextBoxColumn1"].Value.ToString();
-                var firedDG = (bool)row.Cells["firedDataGridViewCheckBoxColumn1"].Value;
+                var idDG = row.Cells["idDataGridViewTextBoxColumn1"].EditedFormattedValue.ToString();
+                var activeDG = (bool)row.Cells["activeDataGridViewCheckBoxColumn1"].EditedFormattedValue;
+                var noteDG = row.Cells["noteDataGridViewTextBoxColumn1"].EditedFormattedValue.ToString();
+                var timeAtDG = row.Cells["timeAtDataGridViewTextBoxColumn1"].EditedFormattedValue.ToString();
+                var playSoundDG = row.Cells["playSoundDataGridViewTextBoxColumn1"].EditedFormattedValue.ToString();
+                var firedDG = (bool)row.Cells["firedDataGridViewCheckBoxColumn1"].EditedFormattedValue;
 
                 string str = timeAtDG;
                 string gridDate = str.Substring(0, str.Length - 3);
 
                 string realDate = DateTime.Now.ToString("g"); // "g" is for full date without seconds
-                if (((DateTime.Parse(gridDate) < DateTime.Parse(realDate)) && (bool)activeDG == true) || (bool)activeDG == false && (bool)firedDG == false)
+                if (((DateTime.Parse(timeAtDG) < DateTime.Parse(realDate)) && (bool)activeDG == true) || (bool)activeDG == false && (bool)firedDG == false)
                 {
                     row.DefaultCellStyle.BackColor = Color.LightCoral;
                     row.Cells["activeDataGridViewCheckBoxColumn1"].Value = false;
                 }
-                if ((DateTime.Parse(gridDate) < DateTime.Parse(realDate)) && (bool)firedDG == true)
+                if ((DateTime.Parse(timeAtDG) < DateTime.Parse(realDate)) && (bool)firedDG == true)
                 {
                     row.DefaultCellStyle.BackColor = Color.LightGreen;
-                    row.Cells["activeDataGridViewCheckBoxColumn1"].Value = true;
+                    //row.Cells["activeDataGridViewCheckBoxColumn1"].Value = true;
                 }
             }
         }
@@ -134,10 +138,20 @@ namespace Reminder
 
                     string realDate = DateTime.Now.ToString("g"); // "g" is for full date without seconds
 
-                    if (gridDate == realDate && (bool)row.Cells["activeDataGridViewCheckBoxColumn1"].Value == true)
+                    if (gridDate == realDate && (bool)row.Cells["activeDataGridViewCheckBoxColumn1"].EditedFormattedValue == true)
                     {
-                        SoundPlayer simpleSound = new SoundPlayer(lbFileList.SelectedValue.ToString());
-                        simpleSound.Play();
+                        WindowsMediaPlayer wplayer = new WindowsMediaPlayer();
+                        if (!Properties.Settings.Default.ReadText)
+                        {
+                            wplayer.URL = lbFileList.SelectedValue.ToString();
+                            wplayer.controls.play();
+                        }
+                        else
+                        {
+                            SpeechSynthesizer rdr = new SpeechSynthesizer();
+                            rdr.SpeakAsync(row.Cells["noteDataGridViewTextBoxColumn1"].Value.ToString());
+                        }
+                        
                         row.DefaultCellStyle.BackColor = Color.LightGreen;
                         row.Cells["firedDataGridViewCheckBoxColumn1"].Value = true;
                         row.Cells["activeDataGridViewCheckBoxColumn1"].Value = false;
@@ -146,7 +160,10 @@ namespace Reminder
                                       + Environment.NewLine + "the sound:"
                                       + row.Cells["playSoundDataGridViewTextBoxColumn1"].Value.ToString()
                                         , "Alarm activated", MessageBoxButtons.OK, MessageBoxIcon.Exclamation);
-                        simpleSound.Stop();
+                        if (!Properties.Settings.Default.ReadText)
+                        {
+                            wplayer.controls.stop();
+                        }
                     }
 
                     ColorDataGridView();
@@ -157,8 +174,11 @@ namespace Reminder
 
         private void btnPlay_Click(object sender, EventArgs e)
         {
-            SoundPlayer simpleSound = new SoundPlayer(lbFileList.SelectedValue.ToString());
-            simpleSound.Play();
+            WindowsMediaPlayer wplayer = new WindowsMediaPlayer();
+            wplayer.URL = lbFileList.SelectedValue.ToString();
+            wplayer.controls.play();
+            //SoundPlayer simpleSound = new SoundPlayer(lbFileList.SelectedValue.ToString());
+            //simpleSound.Play();
         }
 
         private void btnSave_Click(object sender, EventArgs e)
@@ -236,7 +256,9 @@ namespace Reminder
             lblFolder.ForeColor = Color.Blue;
 
             DirectoryInfo dinfo = new DirectoryInfo(folder);
-            FileInfo[] files = dinfo.GetFiles("*.wav");
+            string[] extensions = new[] { ".mp3", ".wav"};
+            FileInfo[] files = dinfo.GetFiles("*.mp3", SearchOption.AllDirectories);
+            files = dinfo.GetFiles().Where(f => extensions.Contains(f.Extension.ToLower())).ToArray();
             foreach (FileInfo filename in files)
             {
                 ff.Add(filename.Name, filename.FullName);
@@ -321,15 +343,53 @@ namespace Reminder
 
         private void fmReminder_FormClosing(object sender, FormClosingEventArgs e)
         {
+            var asdasd = Properties.Settings.Default.ReadText;
             string fileName = "xml.xml";
             try
             {
+                Properties.Settings.Default.Save();
                 tbl.TableName = "AlarmInfo";
                 tbl.WriteXml(fileName, XmlWriteMode.WriteSchema, true);
             }
             catch (Exception ex)
             {
                 throw new Exception(ex.Message);
+            }
+        }
+
+        private void chkSelectSound_CheckedChanged(object sender, EventArgs e)
+        {
+            if (chkSelectSound.Checked)
+            {
+                lbFileList.Enabled = true;
+                chkSayWhat.Checked = false;
+                txtWhat.Enabled = false;
+                Properties.Settings.Default.ReadText = false;
+            }
+            else
+            {
+                lbFileList.Enabled = false;
+                chkSayWhat.Checked = true;
+                txtWhat.Enabled = true;
+                Properties.Settings.Default.ReadText = true;
+            }
+        }
+
+        private void chkSayWhat_CheckedChanged(object sender, EventArgs e)
+        {
+            if (chkSayWhat.Checked)
+            {
+                lbFileList.Enabled = false;
+                chkSelectSound.Checked = false;
+                txtWhat.Enabled = true;
+                Properties.Settings.Default.ReadText = true;
+            }
+            else
+            {
+                lbFileList.Enabled = true;
+                chkSelectSound.Checked = true;
+                txtWhat.Enabled = false;
+                Properties.Settings.Default.ReadText = false;
             }
         }
     }

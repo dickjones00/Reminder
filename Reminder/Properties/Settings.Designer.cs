@@ -25,13 +25,13 @@ namespace Reminder.Properties {
         
         [global::System.Configuration.UserScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("")]
-        public string PathString {
+        [global::System.Configuration.DefaultSettingValueAttribute("False")]
+        public bool ReadText {
             get {
-                return ((string)(this["PathString"]));
+                return ((bool)(this["ReadText"]));
             }
             set {
-                this["PathString"] = value;
+                this["ReadText"] = value;
             }
         }
         
