@@ -88,7 +88,7 @@ namespace Reminder
             }
             foreach (DataGridViewColumn column in grdAlarms.Columns)
             {
-                column.AutoSizeMode = DataGridViewAutoSizeColumnMode.DisplayedCells;
+                column.AutoSizeMode = DataGridViewAutoSizeColumnMode.DisplayedCellsExceptHeader;
                 if (column.DataPropertyName == "Note")
                 {
                     column.AutoSizeMode = DataGridViewAutoSizeColumnMode.Fill;
@@ -203,6 +203,10 @@ namespace Reminder
                 aiAdd.Note = txtWhat.Text;
                 aiAdd.TimeAt = dtpAlarmTime.Value;
                 aiAdd.PlaySound = lbFileList.SelectedValue.ToString();
+                if (Properties.Settings.Default.ReadText)
+                {
+                    aiAdd.PlaySound = "Reading the note text aloud.";
+                }
                 aiAdd.Fired = false;
                 //grdAlarms.DataSource = aiAdd;
                 DataRow row = tbl.NewRow();
