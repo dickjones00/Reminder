@@ -64,10 +64,19 @@
     <Compile Include="fmReminder.Designer.cs">
       <DependentUpon>fmReminder.cs</DependentUpon>
     </Compile>
+    <Compile Include="MyMessageBox.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="MyMessageBox.designer.cs">
+      <DependentUpon>MyMessageBox.cs</DependentUpon>
+    </Compile>
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <EmbeddedResource Include="fmReminder.resx">
       <DependentUpon>fmReminder.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="MyMessageBox.resx">
+      <DependentUpon>MyMessageBox.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="Properties\Resources.resx">
       <Generator>ResXFileCodeGenerator</Generator>
@@ -96,6 +105,7 @@
   </ItemGroup>
   <ItemGroup>
     <Content Include="lists.ico" />
+    <None Include="Resources\title_bar.png" />
   </ItemGroup>
   <ItemGroup>
     <COMReference Include="WMPLib">

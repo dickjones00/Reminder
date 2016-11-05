@@ -110,8 +110,7 @@ namespace Reminder
                 var playSoundDG = row.Cells["playSoundDataGridViewTextBoxColumn1"].EditedFormattedValue.ToString();
                 var firedDG = (bool)row.Cells["firedDataGridViewCheckBoxColumn1"].EditedFormattedValue;
 
-                string str = timeAtDG;
-                string gridDate = str.Substring(0, str.Length - 3);
+                string gridDate = timeAtDG;
 
                 string realDate = DateTime.Now.ToString("g"); // "g" is for full date without seconds
                 if (((DateTime.Parse(timeAtDG) < DateTime.Parse(realDate)) && (bool)activeDG == true) || (bool)activeDG == false && (bool)firedDG == false)
@@ -122,7 +121,6 @@ namespace Reminder
                 if ((DateTime.Parse(timeAtDG) < DateTime.Parse(realDate)) && (bool)firedDG == true)
                 {
                     row.DefaultCellStyle.BackColor = Color.LightGreen;
-                    //row.Cells["activeDataGridViewCheckBoxColumn1"].Value = true;
                 }
             }
         }
@@ -155,11 +153,17 @@ namespace Reminder
                         row.DefaultCellStyle.BackColor = Color.LightGreen;
                         row.Cells["firedDataGridViewCheckBoxColumn1"].Value = true;
                         row.Cells["activeDataGridViewCheckBoxColumn1"].Value = false;
-                        MessageBox.Show("Alarm sound playing for:\r\n"
+                        CustomMessageBox.MyMessageBox.ShowBox("Alarm sound playing for:\r\n"
                                       + row.Cells["noteDataGridViewTextBoxColumn1"].Value.ToString()
                                       + Environment.NewLine + "the sound:"
                                       + row.Cells["playSoundDataGridViewTextBoxColumn1"].Value.ToString()
-                                        , "Alarm activated", MessageBoxButtons.OK, MessageBoxIcon.Exclamation);
+                                        , "Alarm activated"); // OK button returns string "1"
+
+                        //MessageBox.Show("Alarm sound playing for:\r\n"
+                        //              + row.Cells["noteDataGridViewTextBoxColumn1"].Value.ToString()
+                        //              + Environment.NewLine + "the sound:"
+                        //              + row.Cells["playSoundDataGridViewTextBoxColumn1"].Value.ToString()
+                        //                , "Alarm activated", MessageBoxButtons.OK, MessageBoxIcon.Exclamation);
                         if (!Properties.Settings.Default.ReadText)
                         {
                             wplayer.controls.stop();
@@ -177,8 +181,6 @@ namespace Reminder
             WindowsMediaPlayer wplayer = new WindowsMediaPlayer();
             wplayer.URL = lbFileList.SelectedValue.ToString();
             wplayer.controls.play();
-            //SoundPlayer simpleSound = new SoundPlayer(lbFileList.SelectedValue.ToString());
-            //simpleSound.Play();
         }
 
         private void btnSave_Click(object sender, EventArgs e)
@@ -284,63 +286,6 @@ namespace Reminder
             MessageBox.Show("Filepath copied to clipboard.");
         }
 
-        public DataTable gridviewToDataTable(DataGridView gv)
-        {
-            DataTable dtCalculate = new DataTable("AlarmInfo");
-
-            // Create Column 1: Date
-            DataColumn idColumn = new DataColumn();
-            idColumn.DataType = Type.GetType("System.String");
-            idColumn.ColumnName = "id";
-
-            // Create Column 3: TotalSales
-            DataColumn activeColumn = new DataColumn();
-            activeColumn.DataType = Type.GetType("System.Boolean");
-            activeColumn.ColumnName = "active";
-
-
-            DataColumn noteColumn = new DataColumn();
-            noteColumn.DataType = Type.GetType("System.String");
-            noteColumn.ColumnName = "note";
-
-
-            DataColumn timeAtColumn = new DataColumn();
-            timeAtColumn.DataType = Type.GetType("System.DateTime");
-            timeAtColumn.ColumnName = "timeAt";
-
-
-            DataColumn playSoundColumn = new DataColumn();
-            playSoundColumn.DataType = Type.GetType("System.String");
-            playSoundColumn.ColumnName = "playSound";
-
-            DataColumn firedColumn = new DataColumn();
-            firedColumn.DataType = Type.GetType("System.Boolean");
-            firedColumn.ColumnName = "fired";
-
-            // Add the columns to the ProductSalesData DataTable
-            dtCalculate.Columns.Add(idColumn);
-            dtCalculate.Columns.Add(activeColumn);
-            dtCalculate.Columns.Add(noteColumn);
-            dtCalculate.Columns.Add(timeAtColumn);
-            dtCalculate.Columns.Add(playSoundColumn);
-            dtCalculate.Columns.Add(firedColumn);
-
-            foreach (DataGridViewRow row in gv.Rows)
-            {
-                DataRow dr;
-                dr = dtCalculate.NewRow();
-                dr["id"] = row.Cells[0].Value.ToString();
-                dr["active"] = bool.Parse(row.Cells[1].Value.ToString());
-                dr["note"] = row.Cells[2].Value.ToString();
-                dr["timeAt"] = DateTime.Parse(row.Cells[3].Value.ToString());
-                dr["playSound"] = row.Cells[4].Value.ToString();
-                dr["fired"] = bool.Parse(row.Cells[5].Value.ToString());
-
-                dtCalculate.Rows.Add(dr);
-            }
-            return dtCalculate;
-        }
-
         private void fmReminder_FormClosing(object sender, FormClosingEventArgs e)
         {
             var asdasd = Properties.Settings.Default.ReadText;
@@ -363,7 +308,7 @@ namespace Reminder
             {
                 lbFileList.Enabled = true;
                 chkSayWhat.Checked = false;
-                txtWhat.Enabled = false;
+                txtWhat.Enabled = true;
                 Properties.Settings.Default.ReadText = false;
             }
             else

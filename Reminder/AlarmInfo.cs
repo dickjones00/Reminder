@@ -6,10 +6,9 @@ namespace Reminder
 {
     internal class AlarmInfo
     {
-        private static int m_Counter = 0;
         public AlarmInfo()
         {
-            this.Id = System.Threading.Interlocked.Increment(ref m_Counter);
+            
         }
         [JsonProperty(PropertyName = "Id")]
         public int Id { get; set; }
