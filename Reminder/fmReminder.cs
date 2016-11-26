@@ -141,7 +141,8 @@ namespace Reminder
                         WindowsMediaPlayer wplayer = new WindowsMediaPlayer();
                         if (!Properties.Settings.Default.ReadText)
                         {
-                            wplayer.URL = lbFileList.SelectedValue.ToString();
+                            if (lbFileList.SelectedIndex != -1)
+                                wplayer.URL = lbFileList.SelectedValue.ToString();
                             wplayer.controls.play();
                         }
                         else
@@ -191,6 +192,11 @@ namespace Reminder
         private void btnSave_Click(object sender, EventArgs e)
         {
             string wav = "";
+            if (chkSelectSound.Checked && lbFileList.SelectedIndex == -1)
+            {
+                MessageBox.Show("Sound not selected!", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                return;
+            }
             if (txtWhat.Text != "")
             {
                 if (lbFileList.SelectedItem != null)
@@ -202,7 +208,8 @@ namespace Reminder
                 aiAdd.Active = true;
                 aiAdd.Note = txtWhat.Text;
                 aiAdd.TimeAt = dtpAlarmTime.Value;
-                aiAdd.PlaySound = lbFileList.SelectedValue.ToString();
+                if (lbFileList.SelectedIndex != -1)
+                    aiAdd.PlaySound = lbFileList.SelectedValue.ToString();
                 if (Properties.Settings.Default.ReadText)
                 {
                     aiAdd.PlaySound = "Reading the note text aloud.";
